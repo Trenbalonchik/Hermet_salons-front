@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hermet Salons — Реєстрація бізнесу</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F3EBE1; --milk: #FBF7F1; --coffee: #6F4E37;
+    --coffee-dark: #3E2B21; --coffee-soft: rgba(62,43,33,0.65);
+    --line: #DFCFBB; --error: #B3483F;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--cream); color: var(--coffee-dark); font-family: 'Inter', sans-serif;
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+  }
+  .card {
+    background: var(--milk); border: 1px solid var(--line); border-radius: 16px;
+    padding: 2.2rem clamp(1.5rem, 5vw, 2.6rem); max-width: 460px; width: 100%;
+  }
+  a.back { color: var(--coffee-soft); font-size: 0.85rem; text-decoration: none; display: inline-block; margin-bottom: 1.4rem; }
+  h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+  p.lede { color: var(--coffee-soft); font-size: 0.92rem; margin-bottom: 1.8rem; }
+
+  .field { margin-bottom: 1.1rem; }
+  .field label { display:block; font-size: 0.8rem; color: var(--coffee-soft); margin-bottom: 0.4rem; }
+  .field input, .field textarea {
+    width: 100%; padding: 0.75rem 0.9rem;
+    border: 1.5px solid var(--line); border-radius: 10px;
+    font-family: 'Inter', sans-serif; font-size: 0.95rem;
+    background: var(--cream); outline: none; resize: vertical;
+    transition: border-color 0.2s;
+  }
+  .field input:focus, .field textarea:focus { border-color: var(--coffee); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 420px) { .row { grid-template-columns: 1fr; } }
+
+  .btn {
+    width: 100%; padding: 0.95rem; background: var(--coffee); color: var(--milk);
+    border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 600;
+    cursor: pointer; margin-top: 0.5rem; transition: opacity 0.2s;
+  }
+  .btn:hover { opacity: 0.92; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .error-msg { color: var(--error); font-size: 0.85rem; margin-top: 0.6rem; display: none; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <a href="index.html" class="back">← Назад</a>
+    <h1>Реєстрація салону</h1>
+    <p class="lede">Створіть профіль — далі керуватимете розкладом, послугами й записами з кабінету.</p>
+
+    <div class="row">
+      <div class="field"><label>Ваше ім'я</label><input type="text" id="ownerName" placeholder="Ім'я власника"></div>
+      <div class="field"><label>Ваш телефон</label><input type="tel" id="ownerPhone" placeholder="+380..."></div>
+    </div>
+    <div class="field"><label>Назва салону</label><input type="text" id="bizName" placeholder="Наприклад, Kinma Beauty"></div>
+    <div class="field"><label>Телефон салону</label><input type="tel" id="bizPhone" placeholder="+380..."></div>
+    <div class="field"><label>Опис салону</label><textarea id="bizDescription" rows="3" placeholder="Коротко про послуги й адресу — це побачить AI-асистент"></textarea></div>
+
+    <button class="btn" id="registerBtn">Створити салон</button>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+
+<script>
+  const API_BASE = "http://localhost:8000";
+
+  document.getElementById('registerBtn').addEventListener('click', async () => {
+    const payload = {
+      owner_name: document.getElementById('ownerName').value.trim(),
+      phone: document.getElementById('ownerPhone').value.trim(),
+      business_name: document.getElementById('bizName').value.trim(),
+      business_phone: document.getElementById('bizPhone').value.trim(),
+      description: document.getElementById('bizDescription').value.trim(),
+    };
+    const errorEl = document.getElementById('errorMsg');
+    const btn = document.getElementById('registerBtn');
+    errorEl.style.display = 'none';
+
+    if (!payload.owner_name || !payload.phone || !payload.business_name) {
+      errorEl.textContent = "Заповніть ім'я, телефон і назву салону.";
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Створюємо…";
+
+    try {
+      const res = await fetch(`${API_BASE}/businesses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error("bad response");
+      const data = await res.json();
+
+      window.location.href = `dashboard.html?business=${data.business_id}`;
+    } catch (err) {
+      errorEl.textContent = "Не вдалось з'єднатись із сервером. Перевірте, чи запущено API.";
+      errorEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = "Створити салон";
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hermet Salons — Реєстрація клієнта</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F3EBE1;
+    --milk: #FBF7F1;
+    --coffee: #6F4E37;
+    --coffee-dark: #3E2B21;
+    --coffee-soft: rgba(62,43,33,0.65);
+    --line: #DFCFBB;
+    --error: #B3483F;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--cream);
+    color: var(--coffee-dark);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+  .card {
+    background: var(--milk);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 2.2rem clamp(1.5rem, 5vw, 2.6rem);
+    max-width: 420px;
+    width: 100%;
+  }
+  a.back { color: var(--coffee-soft); font-size: 0.85rem; text-decoration: none; display: inline-block; margin-bottom: 1.4rem; }
+  h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+  p.lede { color: var(--coffee-soft); font-size: 0.92rem; margin-bottom: 1.8rem; }
+
+  .field { margin-bottom: 1.1rem; }
+  .field label { display:block; font-size: 0.8rem; color: var(--coffee-soft); margin-bottom: 0.4rem; }
+  .field input {
+    width: 100%; padding: 0.75rem 0.9rem;
+    border: 1.5px solid var(--line); border-radius: 10px;
+    font-family: 'Inter', sans-serif; font-size: 0.95rem;
+    background: var(--cream); outline: none;
+    transition: border-color 0.2s;
+  }
+  .field input:focus { border-color: var(--coffee); }
+
+  .btn {
+    width: 100%; padding: 0.95rem;
+    background: var(--coffee); color: var(--milk);
+    border: none; border-radius: 10px;
+    font-size: 0.95rem; font-weight: 600; cursor: pointer;
+    margin-top: 0.5rem; transition: opacity 0.2s;
+  }
+  .btn:hover { opacity: 0.92; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .error-msg { color: var(--error); font-size: 0.85rem; margin-top: 0.6rem; display: none; }
+
+  .success-view { display: none; text-align: center; }
+  .success-view .check {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--coffee); color: var(--milk);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; margin: 0 auto 1.2rem;
+  }
+  .success-view h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.6rem; }
+  .success-view p { color: var(--coffee-soft); font-size: 0.92rem; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <a href="index.html" class="back">← Назад</a>
+
+    <div id="formView">
+      <h1>Реєстрація клієнта</h1>
+      <p class="lede">Один раз — і ви клієнт будь-якого салону на Hermet Salons.</p>
+
+      <div class="field">
+        <label>Ім'я</label>
+        <input type="text" id="name" placeholder="Ваше ім'я">
+      </div>
+      <div class="field">
+        <label>Телефон</label>
+        <input type="tel" id="phone" placeholder="+380...">
+      </div>
+      <div class="field">
+        <label>Email (необов'язково)</label>
+        <input type="email" id="email" placeholder="для нагадувань">
+      </div>
+
+      <button class="btn" id="registerBtn">Зареєструватись</button>
+      <div class="error-msg" id="errorMsg"></div>
+    </div>
+
+    <div class="success-view" id="successView">
+      <div class="check">✓</div>
+      <h2>Ви зареєстровані у Hermet Salons!</h2>
+      <p>Приємного користування.</p>
+    </div>
+  </div>
+
+<script>
+  const API_BASE = "http://localhost:8000";
+
+  document.getElementById('registerBtn').addEventListener('click', async () => {
+    const name = document.getElementById('name').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const errorEl = document.getElementById('errorMsg');
+    const btn = document.getElementById('registerBtn');
+
+    errorEl.style.display = 'none';
+
+    if (!name || !phone) {
+      errorEl.textContent = "Заповніть ім'я і телефон.";
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Реєструємо…";
+
+    try {
+      const res = await fetch(`${API_BASE}/clients/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, phone, email: email || null })
+      });
+
+      if (!res.ok) throw new Error("bad response");
+
+      document.getElementById('formView').style.display = 'none';
+      document.getElementById('successView').style.display = 'block';
+    } catch (err) {
+      errorEl.textContent = "Не вдалось з'єднатись із сервером. Перевірте, чи запущено API.";
+      errorEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = "Зареєструватись";
+    }
+  });
+</script>
+</body>
+</html>
