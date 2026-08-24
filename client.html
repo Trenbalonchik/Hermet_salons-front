@@ -106,7 +106,7 @@
   </div>
 
 <script>
-  const API_BASE = "https://ccxrh-91-246-151-240.run.pinggy-free.link/docs](https://ccxrh-91-246-151-240.run.pinggy-free.link";
+  const API_BASE = "https://chatty-spies-repair.loca.lt";
 
   document.getElementById('registerBtn').addEventListener('click', async () => {
     const name = document.getElementById('name').value.trim();
@@ -129,7 +129,7 @@
     try {
       const res = await fetch(`${API_BASE}/clients/register`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "bypass-tunnel-reminder": "true" },
         body: JSON.stringify({ name, phone, email: email || null })
       });
 

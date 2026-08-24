@@ -136,7 +136,7 @@
 </main>
 
 <script>
-  const API_BASE = "https://ccxrh-91-246-151-240.run.pinggy-free.link/docs](https://ccxrh-91-246-151-240.run.pinggy-free.link";
+  const API_BASE = "https://chatty-spies-repair.loca.lt";
   const params = new URLSearchParams(window.location.search);
   const BUSINESS_ID = parseInt(params.get('business'));
 
@@ -161,7 +161,7 @@
   // ---------- Header info ----------
   async function loadBusinessInfo() {
     try {
-      const res = await fetch(`${API_BASE}/businesses/${BUSINESS_ID}`);
+      const res = await fetch(`${API_BASE}/businesses/${BUSINESS_ID}`, { headers: { 'bypass-tunnel-reminder': 'true' } });
       const data = await res.json();
       document.getElementById('bizName').textContent = data.name;
       document.getElementById('bizDescription').textContent = data.description || '';
@@ -174,7 +174,7 @@
   async function loadServices() {
     const list = document.getElementById('svcList');
     try {
-      const res = await fetch(`${API_BASE}/businesses/${BUSINESS_ID}/services`);
+      const res = await fetch(`${API_BASE}/businesses/${BUSINESS_ID}/services`, { headers: { 'bypass-tunnel-reminder': 'true' } });
       const data = await res.json();
       if (!data.services || data.services.length === 0) {
         list.innerHTML = '<div class="muted">Салон ще не додав послуги — просто оберіть час.</div>';
@@ -219,7 +219,7 @@
 
   async function loadAvailableDates(year, month) {
     try {
-      const res = await fetch(`${API_BASE}/businesses/${BUSINESS_ID}/available-dates?year=${year}&month=${month+1}`);
+      const res = await fetch(`${API_BASE}/businesses/${BUSINESS_ID}/available-dates?year=${year}&month=${month+1}`, { headers: { 'bypass-tunnel-reminder': 'true' } });
       const data = await res.json();
       availableDatesSet = new Set(data.dates);
     } catch (err) {
@@ -279,7 +279,7 @@
     row.innerHTML = '<span class="muted">Завантаження…</span>';
 
     try {
-      const res = await fetch(`${API_BASE}/businesses/${BUSINESS_ID}/slots?day=${toISO(selectedDate)}`);
+      const res = await fetch(`${API_BASE}/businesses/${BUSINESS_ID}/slots?day=${toISO(selectedDate)}`, { headers: { 'bypass-tunnel-reminder': 'true' } });
       const data = await res.json();
       row.innerHTML = '';
       if (data.slots.length === 0) {
@@ -325,7 +325,7 @@
     try {
       const res = await fetch(`${API_BASE}/book`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'bypass-tunnel-reminder': 'true' },
         body: JSON.stringify({
           business_id: BUSINESS_ID, slot_id: selectedSlotId,
           name, phone, service_id: selectedServiceId

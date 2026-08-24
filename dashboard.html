@@ -177,7 +177,7 @@
 </main>
 
 <script>
-  const API_BASE = "https://ccxrh-91-246-151-240.run.pinggy-free.link/docs](https://ccxrh-91-246-151-240.run.pinggy-free.link";
+  const API_BASE = "https://chatty-spies-repair.loca.lt";
   const WEEKDAY_LABELS = ["Пн","Вт","Ср","Чт","Пт","Сб","Нд"];
   const params = new URLSearchParams(window.location.search);
   const BUSINESS_ID = parseInt(params.get('business'));
@@ -200,7 +200,7 @@
   // ---------- Info / nav badge ----------
   async function loadInfo() {
     try {
-      const res = await fetch(`${API_BASE}/businesses/${BUSINESS_ID}`);
+      const res = await fetch(`${API_BASE}/businesses/${BUSINESS_ID}`, { headers: { 'bypass-tunnel-reminder': 'true' } });
       const data = await res.json();
       document.getElementById('bizNameTag').textContent = data.name;
       document.getElementById('infoName').value = data.name;
@@ -216,7 +216,7 @@
     try {
       const res = await fetch(`${API_BASE}/businesses/${BUSINESS_ID}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'bypass-tunnel-reminder': 'true' },
         body: JSON.stringify({
           name: document.getElementById('infoName').value.trim(),
           phone: document.getElementById('infoPhone').value.trim(),
@@ -237,7 +237,7 @@
   async function loadBookings() {
     const list = document.getElementById('bookingsList');
     try {
-      const res = await fetch(`${API_BASE}/businesses/${BUSINESS_ID}/bookings`);
+      const res = await fetch(`${API_BASE}/businesses/${BUSINESS_ID}/bookings`, { headers: { 'bypass-tunnel-reminder': 'true' } });
       const data = await res.json();
       if (!data.bookings || data.bookings.length === 0) {
         list.innerHTML = '<div class="empty-note">Записів поки немає.</div>';
@@ -313,7 +313,7 @@
     try {
       const res = await fetch(`${API_BASE}/businesses/${BUSINESS_ID}/schedule-template`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'bypass-tunnel-reminder': 'true' },
         body: JSON.stringify({ days: selectedDays, times, duration_minutes: duration })
       });
       const data = await res.json();
@@ -329,7 +329,7 @@
   async function loadServices() {
     const list = document.getElementById('servicesList');
     try {
-      const res = await fetch(`${API_BASE}/businesses/${BUSINESS_ID}/services`);
+      const res = await fetch(`${API_BASE}/businesses/${BUSINESS_ID}/services`, { headers: { 'bypass-tunnel-reminder': 'true' } });
       const data = await res.json();
       if (!data.services || data.services.length === 0) {
         list.innerHTML = '<div class="empty-note">Послуг ще немає.</div>';
@@ -348,7 +348,7 @@
   }
 
   async function deleteService(id) {
-    await fetch(`${API_BASE}/services/${id}`, { method: 'DELETE' });
+    await fetch(`${API_BASE}/services/${id}`, { method: 'DELETE', headers: { 'bypass-tunnel-reminder': 'true' } });
     loadServices();
   }
 
@@ -368,7 +368,7 @@
     try {
       await fetch(`${API_BASE}/businesses/${BUSINESS_ID}/services`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'bypass-tunnel-reminder': 'true' },
         body: JSON.stringify({ name, duration_minutes: duration, price })
       });
       document.getElementById('svcName').value = '';

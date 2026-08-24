@@ -67,7 +67,7 @@
   </div>
 
 <script>
-  const API_BASE = "https://ccxrh-91-246-151-240.run.pinggy-free.link/docs](https://ccxrh-91-246-151-240.run.pinggy-free.link";
+  const API_BASE = "https://chatty-spies-repair.loca.lt";
 
   document.getElementById('registerBtn').addEventListener('click', async () => {
     const payload = {
@@ -93,7 +93,7 @@
     try {
       const res = await fetch(`${API_BASE}/businesses`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'bypass-tunnel-reminder': 'true' },
         body: JSON.stringify(payload)
       });
       if (!res.ok) throw new Error("bad response");
