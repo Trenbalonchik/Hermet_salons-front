@@ -46,6 +46,17 @@
   .btn:hover { opacity: 0.92; }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .error-msg { color: var(--error); font-size: 0.85rem; margin-top: 0.6rem; display: none; }
+
+  .field small.hint { display:block; font-size: 0.75rem; color: var(--coffee-soft); margin-top: 0.35rem; }
+  .recognized-hint {
+    display: none; align-items: center; gap: 0.5rem;
+    background: rgba(111,78,55,0.08); border: 1px solid var(--line);
+    border-radius: 10px; padding: 0.7rem 0.85rem; margin-bottom: 1.1rem;
+    font-size: 0.85rem; color: var(--coffee-dark);
+  }
+  .recognized-hint .dot { width: 8px; height: 8px; border-radius: 50%; background: #3E8E5A; flex-shrink: 0; }
+  .recognized-hint a { color: var(--coffee); font-weight: 600; text-decoration: none; margin-left: auto; white-space: nowrap; }
+  .recognized-hint a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -56,7 +67,16 @@
 
     <div class="row">
       <div class="field"><label>Ваше ім'я</label><input type="text" id="ownerName" placeholder="Ім'я власника"></div>
-      <div class="field"><label>Ваш телефон</label><input type="tel" id="ownerPhone" placeholder="+380..."></div>
+      <div class="field">
+        <label>Ваш телефон</label>
+        <input type="tel" id="ownerPhone" placeholder="+380...">
+        <small class="hint">Маєте акаунт? Введіть номер і ми впізнаємо вас!</small>
+      </div>
+    </div>
+    <div class="recognized-hint" id="recognizedHint">
+      <span class="dot"></span>
+      <span id="recognizedText"></span>
+      <a href="#" id="recognizedLink">Перейти в кабінет →</a>
     </div>
     <div class="field"><label>Назва салону</label><input type="text" id="bizName" placeholder="Наприклад, Kinma Beauty"></div>
     <div class="field"><label>Телефон салону</label><input type="tel" id="bizPhone" placeholder="+380..."></div>
@@ -68,6 +88,45 @@
 
 <script>
   const API_BASE = "https://puny-ravens-hear.loca.lt";
+
+  // ---------- Recognize returning owner by their PERSONAL phone (not salon phone) ----------
+  let ownerLookupTimer = null;
+
+  function normalizePhone(v) { return v.replace(/[^\d+]/g, ''); }
+
+  async function lookupOwnerByPhone(phone) {
+    const hint = document.getElementById('recognizedHint');
+    const hintText = document.getElementById('recognizedText');
+    const link = document.getElementById('recognizedLink');
+
+    if (normalizePhone(phone).replace('+', '').length < 9) {
+      hint.style.display = 'none';
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/businesses/by-owner-phone/${encodeURIComponent(phone)}`, {
+        headers: { 'bypass-tunnel-reminder': 'true' }
+      });
+      if (res.status === 404) {
+        hint.style.display = 'none';
+        return;
+      }
+      if (!res.ok) throw new Error('lookup failed');
+      const data = await res.json();
+      hintText.textContent = `Знайшли ваш салон «${data.name}».`;
+      link.href = `dashboard.html?business=${data.business_id}`;
+      hint.style.display = 'flex';
+    } catch (err) {
+      hint.style.display = 'none';
+    }
+  }
+
+  document.getElementById('ownerPhone').addEventListener('input', (e) => {
+    clearTimeout(ownerLookupTimer);
+    const phone = e.target.value.trim();
+    ownerLookupTimer = setTimeout(() => lookupOwnerByPhone(phone), 500);
+  });
 
   document.getElementById('registerBtn').addEventListener('click', async () => {
     const payload = {

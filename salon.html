@@ -85,6 +85,61 @@
   .success-view h2 { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.4rem; }
 
   .hidden { display: none !important; }
+
+  /* ---- client recognition hint ---- */
+  .recognized-hint {
+    display: none; align-items: center; gap: 0.5rem;
+    background: rgba(111,78,55,0.08); border: 1px solid var(--line);
+    border-radius: 10px; padding: 0.6rem 0.8rem; margin-top: -0.3rem; margin-bottom: 1rem;
+    font-size: 0.85rem; color: var(--coffee-dark);
+  }
+  .recognized-hint .dot {
+    width: 8px; height: 8px; border-radius: 50%; background: #3E8E5A; flex-shrink: 0;
+  }
+  .field small.hint { display:block; font-size: 0.75rem; color: var(--coffee-soft); margin-top: 0.35rem; }
+
+  /* ---- chat widget ---- */
+  .chat-fab {
+    position: fixed; bottom: 1.4rem; right: 1.4rem; width: 56px; height: 56px;
+    border-radius: 50%; background: var(--coffee); color: var(--milk); border: none;
+    font-size: 1.4rem; cursor: pointer; box-shadow: 0 6px 18px rgba(62,43,33,0.28);
+    display: flex; align-items: center; justify-content: center; z-index: 1000;
+    transition: transform 0.15s ease;
+  }
+  .chat-fab:hover { transform: scale(1.05); }
+
+  .chat-window {
+    position: fixed; bottom: 5.6rem; right: 1.4rem; width: min(360px, calc(100vw - 2.4rem));
+    height: min(500px, calc(100vh - 8rem)); background: var(--milk); border: 1px solid var(--line);
+    border-radius: 16px; box-shadow: 0 12px 32px rgba(62,43,33,0.25);
+    display: none; flex-direction: column; overflow: hidden; z-index: 1000;
+  }
+  .chat-window.open { display: flex; }
+  .chat-header {
+    background: var(--coffee); color: var(--milk); padding: 0.9rem 1rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .chat-header .title { font-weight: 700; font-size: 0.92rem; }
+  .chat-header .sub { font-size: 0.72rem; opacity: 0.85; }
+  .chat-header button {
+    background: none; border: none; color: var(--milk); font-size: 1.2rem; cursor: pointer; line-height: 1;
+  }
+  .chat-body { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.6rem; }
+  .chat-msg { max-width: 82%; padding: 0.55rem 0.8rem; border-radius: 12px; font-size: 0.87rem; line-height: 1.4; }
+  .chat-msg.bot { background: var(--cream); color: var(--coffee-dark); align-self: flex-start; border-bottom-left-radius: 4px; }
+  .chat-msg.user { background: var(--coffee); color: var(--milk); align-self: flex-end; border-bottom-right-radius: 4px; }
+  .chat-msg.typing { background: var(--cream); color: var(--coffee-soft); align-self: flex-start; font-style: italic; }
+  .chat-input-row { display: flex; gap: 0.5rem; padding: 0.7rem; border-top: 1px solid var(--line); }
+  .chat-input-row input {
+    flex: 1; padding: 0.6rem 0.8rem; border: 1.5px solid var(--line); border-radius: 20px;
+    font-family: 'Inter', sans-serif; font-size: 0.87rem; outline: none; background: var(--cream);
+  }
+  .chat-input-row input:focus { border-color: var(--coffee); }
+  .chat-input-row button {
+    width: 38px; height: 38px; border-radius: 50%; background: var(--coffee); color: var(--milk);
+    border: none; cursor: pointer; font-size: 1rem; flex-shrink: 0;
+  }
+  .chat-input-row button:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -120,8 +175,16 @@
 
   <section class="card hidden" id="formCard">
     <h2>3. Ваші контакти</h2>
+    <div class="field">
+      <label>Телефон</label>
+      <input type="tel" id="clientPhone" placeholder="+380...">
+      <small class="hint">Якщо ви вже записувались раніше — ми впізнаємо вас за номером.</small>
+    </div>
+    <div class="recognized-hint" id="recognizedHint">
+      <span class="dot"></span>
+      <span id="recognizedText"></span>
+    </div>
     <div class="field"><label>Ім'я</label><input type="text" id="clientName"></div>
-    <div class="field"><label>Телефон</label><input type="tel" id="clientPhone" placeholder="+380..."></div>
     <button class="btn" id="confirmBtn">Підтвердити запис</button>
   </section>
 
@@ -134,6 +197,23 @@
   </section>
 
 </main>
+
+<button class="chat-fab" id="chatFab" aria-label="Чат з асистентом">💬</button>
+
+<div class="chat-window" id="chatWindow">
+  <div class="chat-header">
+    <div>
+      <div class="title" id="chatTitle">Асистент салону</div>
+      <div class="sub">Зазвичай відповідає одразу</div>
+    </div>
+    <button id="chatClose">✕</button>
+  </div>
+  <div class="chat-body" id="chatBody"></div>
+  <div class="chat-input-row">
+    <input type="text" id="chatInput" placeholder="Напишіть повідомлення…">
+    <button id="chatSend">➤</button>
+  </div>
+</div>
 
 <script>
   const API_BASE = "https://puny-ravens-hear.loca.lt";
@@ -165,6 +245,7 @@
       const data = await res.json();
       document.getElementById('bizName').textContent = data.name;
       document.getElementById('bizDescription').textContent = data.description || '';
+      document.getElementById('chatTitle').textContent = `Асистент «${data.name}»`;
     } catch (err) {
       document.getElementById('bizName').textContent = 'Салон не знайдено';
     }
@@ -348,6 +429,110 @@
     document.getElementById('calendarCard').classList.add('hidden');
     document.getElementById('formCard').classList.add('hidden');
     document.getElementById('successCard').classList.remove('hidden');
+  });
+
+  // ---------- Returning-client recognition by phone ----------
+  let recognizedName = null;
+  let phoneLookupTimer = null;
+
+  function normalizePhone(v) { return v.replace(/[^\d+]/g, ''); }
+
+  async function lookupClientByPhone(phone) {
+    const hint = document.getElementById('recognizedHint');
+    const hintText = document.getElementById('recognizedText');
+    const nameInput = document.getElementById('clientName');
+
+    if (normalizePhone(phone).replace('+','').length < 9) {
+      hint.style.display = 'none';
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/clients/by-phone/${encodeURIComponent(phone)}`, {
+        headers: { 'bypass-tunnel-reminder': 'true' }
+      });
+      if (res.status === 404) {
+        recognizedName = null;
+        hint.style.display = 'none';
+        return;
+      }
+      if (!res.ok) throw new Error('lookup failed');
+      const data = await res.json();
+      recognizedName = data.name;
+      nameInput.value = data.name;
+      hintText.textContent = `Раді бачити знову, ${data.name}!`;
+      hint.style.display = 'flex';
+    } catch (err) {
+      hint.style.display = 'none';
+    }
+  }
+
+  document.getElementById('clientPhone').addEventListener('input', (e) => {
+    clearTimeout(phoneLookupTimer);
+    const phone = e.target.value.trim();
+    phoneLookupTimer = setTimeout(() => lookupClientByPhone(phone), 500);
+  });
+
+  // ---------- Chat widget ----------
+  const chatFab = document.getElementById('chatFab');
+  const chatWindow = document.getElementById('chatWindow');
+  const chatBody = document.getElementById('chatBody');
+  const chatInput = document.getElementById('chatInput');
+  const chatSend = document.getElementById('chatSend');
+  let chatOpened = false;
+
+  function addChatMessage(text, role) {
+    const el = document.createElement('div');
+    el.className = `chat-msg ${role}`;
+    el.textContent = text;
+    chatBody.appendChild(el);
+    chatBody.scrollTop = chatBody.scrollHeight;
+    return el;
+  }
+
+  function toggleChat(open) {
+    chatWindow.classList.toggle('open', open);
+    if (open && !chatOpened) {
+      chatOpened = true;
+      addChatMessage('Вітаю! Я асистент салону. Чим можу допомогти — послуги, ціни, розклад?', 'bot');
+    }
+    if (open) chatInput.focus();
+  }
+
+  chatFab.addEventListener('click', () => toggleChat(!chatWindow.classList.contains('open')));
+  document.getElementById('chatClose').addEventListener('click', () => toggleChat(false));
+
+  async function sendChatMessage() {
+    const text = chatInput.value.trim();
+    if (!text) return;
+    addChatMessage(text, 'user');
+    chatInput.value = '';
+    chatInput.disabled = true;
+    chatSend.disabled = true;
+    const typingEl = addChatMessage('Друкує…', 'bot typing');
+
+    try {
+      const res = await fetch(`${API_BASE}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'bypass-tunnel-reminder': 'true' },
+        body: JSON.stringify({ business_id: BUSINESS_ID, message: text })
+      });
+      const data = await res.json();
+      typingEl.remove();
+      addChatMessage(data.reply || 'Вибачте, сталася помилка.', 'bot');
+    } catch (err) {
+      typingEl.remove();
+      addChatMessage('Не вдалось з\'єднатись із сервером. Спробуйте пізніше.', 'bot');
+    } finally {
+      chatInput.disabled = false;
+      chatSend.disabled = false;
+      chatInput.focus();
+    }
+  }
+
+  chatSend.addEventListener('click', sendChatMessage);
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendChatMessage();
   });
 
   // ---------- Init ----------
